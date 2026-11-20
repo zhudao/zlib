@@ -79,6 +79,9 @@ func runToolUpdate(ctx context.Context, in io.Reader, out, errOut io.Writer, met
 	lipgloss.Fprintf(out, "Updating zlib with %s %s\n", name, colorFaint("("+name+" "+strings.Join(args, " ")+")"))
 	start := time.Now()
 	if err := runUpdateCommand(ctx, in, out, errOut, name, args); err != nil {
+		if method == updateBrew {
+			lipgloss.Fprint(errOut, brewRenameNotice(executable))
+		}
 		return fmt.Errorf("%s update failed: %w", name, err)
 	}
 	lipgloss.Fprintf(out, "%s %s finished %s\n", colorGreen(symbolSuccess), name, colorFaint("in "+formatElapsed(time.Since(start))))
@@ -179,9 +182,38 @@ func updateCommand(method updateMethod) (string, []string) {
 	}
 }
 
-// isHomebrewKeg reports whether path is inside a zlib-cli keg.
+// isHomebrewKeg reports whether path is inside a zlib-cli keg, or the keg of
+// the zlib formula it replaced (homebrew/core's zlib is a library with no zlib
+// executable, so that directory cannot hold another program).
 func isHomebrewKeg(path string) bool {
-	return strings.Contains(strings.ToLower(strings.ReplaceAll(path, `\`, "/")), "/cellar/zlib-cli/")
+	p := strings.ToLower(strings.ReplaceAll(path, `\`, "/"))
+	return strings.Contains(p, "/cellar/zlib-cli/") || strings.Contains(p, "/cellar/zlib/")
+}
+
+// isOldFormulaKeg reports whether path is inside the keg of the retired zlib
+// formula. homebrew/core's zlib is a library with no zlib executable, so a copy
+// of this program in that keg always comes from the old formula.
+func isOldFormulaKeg(path string) bool {
+	return strings.Contains(strings.ToLower(strings.ReplaceAll(path, `\`, "/")), "/cellar/zlib/")
+}
+
+// brewRenameNotice tells a copy installed from the retired zlib formula how to
+// move to zlib-cli. Homebrew cannot do it: the upgrade names zlib-cli, which is
+// not installed. Anyone else gets nothing, because "brew uninstall zlib" would
+// remove homebrew/core's library for a zlib-cli user who also has it. The grep
+// keeps the same command safe when both kegs share the zlib rack: brew list then
+// shows only the library's files, and a bare uninstall would remove the library.
+func brewRenameNotice(executable string) string {
+	if !isOldFormulaKeg(executable) {
+		return ""
+	}
+	return fmt.Sprintf("\n%s\n"+
+		"  This copy comes from the old formula, which Homebrew no longer updates. Replace it:\n"+
+		"    %s\n"+
+		"    %s\n\n",
+		colorBold(symbolInfo+" The Homebrew formula was renamed from zlib to zlib-cli."),
+		colorCyan("brew list zlib | grep -q bin/zlib && brew uninstall zlib"),
+		colorCyan("brew install heartleo/tap/zlib-cli"))
 }
 
 func detectUpdateMethod(ctx context.Context, executable string) updateMethod {

@@ -44,6 +44,10 @@ macOS / Linux with Homebrew:
 brew install heartleo/tap/zlib-cli
 ```
 
+> [!IMPORTANT]
+> The Homebrew formula was renamed from `zlib` to **`zlib-cli`**. Use the
+> command above. The installed command is still `zlib`.
+
 macOS / Linux with the install script (installs to `/usr/local/bin`, may ask for `sudo`):
 
 ```bash
@@ -135,8 +139,9 @@ pagination, and download options.
 
 ## Agent setup
 
-Install the plugin, or register the MCP server (`zlib mcp`). If `zlib` is
-missing, the plugin installs it on first use. Log in yourself with `zlib login`
+Install the plugin, or register the MCP server (`zlib mcp`). The plugin brings
+the skills and the MCP server. If `zlib` is missing, the skills install it on
+first use; the MCP server needs it on `PATH`. Log in yourself with `zlib login`
 so your password stays out of chat.
 
 ### Claude Code
@@ -157,6 +162,15 @@ codex plugin marketplace add heartleo/zlib
 codex plugin add zlib@zlib
 ```
 
+### Grok
+
+Plugin:
+
+```sh
+grok plugin marketplace add heartleo/zlib
+grok plugin install zlib --trust
+```
+
 ### MCP server
 
 Register `zlib mcp` as a local stdio server. `zlib` must be on `PATH` and signed in:
@@ -167,6 +181,9 @@ claude mcp add -s user zlib -- zlib mcp
 
 # Codex
 codex mcp add zlib -- zlib mcp
+
+# Grok
+grok mcp add zlib -- zlib mcp
 ```
 
 Add `--read-only` after `mcp` to hide download, history deletion, Kindle

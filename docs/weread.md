@@ -146,12 +146,10 @@ download the book again to retry the import, run `zlib weread import <path>`.
    the book as added, already present, or unreadable. Cancelling at this step
    tells WeRead to abandon the import.
 
-[WeRead import limits](weread-research.md) records the protocol and limits in
-detail.
-
 ## Proxy
 
-`ZLIB_PROXY` applies only to Z-Library. WeRead requests use the system proxy
+`ZLIB_PROXY` does not apply to WeRead (it covers Z-Library and metadata
+lookups). WeRead requests use the system proxy
 (`HTTPS_PROXY`) unless you set **WeRead proxy**:
 
 ```sh
@@ -162,6 +160,11 @@ Enter `direct` to bypass every proxy, which helps when a global proxy routes
 traffic abroad and WeRead asks for verification, or a proxy URL. The editor's
 Test action (Ctrl+T) checks that WeRead answers without logging in. The value is
 saved as `ZLIB_WEREAD_PROXY` in the global `.env`.
+
+The `weread` [metadata source](metadata.md#weread) also uses this proxy
+setting. It sends a separate API key (`ZLIB_WEREAD_API_KEY`) to Tencent's agent
+gateway and does not use the login above, so logging in does not enable it and
+the key does not enable imports.
 
 ## If the import fails
 
